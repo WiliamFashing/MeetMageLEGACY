@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
+
 <title>M33TMAG3</title>
 
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -9,101 +11,168 @@
 <style>
 
 body{
-background:linear-gradient(#000,#fff);
+
+background:
+linear-gradient(#000,#fff);
+
 text-align:center;
+
 margin:0;
+
 padding:0;
+
+font-family:sans-serif;
+
 }
 
 h1{
-color:#fff;
-text-shadow:1px 1px 2px #ccc;
+
+color:white;
+
+text-shadow:
+1px 1px 2px #ccc;
+
 margin-top:40px;
+
 }
 
 input{
+
 padding:10px;
+
 font-size:16px;
+
 border-radius:8px;
+
 border:1px solid #ccc;
+
 margin:5px;
+
 width:200px;
+
 }
 
 button{
+
 padding:10px 20px;
+
 font-size:16px;
+
 border-radius:8px;
+
 cursor:pointer;
+
 margin:5px;
+
 }
 
 button:hover{
+
 background:#3248a8;
-color:#fff;
+
+color:white;
+
 }
 
 #videos{
+
 margin-top:20px;
+
 }
 
 video{
+
 width:40%;
+
 border-radius:12px;
+
 margin:10px;
+
 }
 
-/* TAG */
+/* version tag */
 
 #versionTag{
 
 display:none;
+
 background:#00ff99;
-color:#000;
+
+color:black;
+
 font-weight:bold;
-padding:8px 14px;
-border-radius:10px;
+
+padding:10px 18px;
+
+border-radius:12px;
+
 margin:auto;
+
 margin-top:10px;
+
 width:max-content;
 
-box-shadow:0 0 12px rgba(0,0,0,0.25);
+box-shadow:
+0 0 12px rgba(0,0,0,0.3);
 
 }
 
 </style>
+
 </head>
 
 <body>
 
 <h1>INITIAL</h1>
+
 <h1>M33T MAG3</h1>
+
 <h1>STRING DIALER</h1>
 
-<p>INITIATE A SESSION OR JOIN ONE WITH A STRING</p>
+<p>
+INITIATE A SESSION
+OR JOIN ONE
+WITH A STRING
+</p>
 
-<button id="createBtn">INITIATE</button>
+<button id="createBtn">
+INITIATE
+</button>
+
 <br>
 
-<input id="joinCode" placeholder="ENTER STRING">
+<input
+id="joinCode"
+placeholder="ENTER STRING"
+>
 
-<button id="joinBtn">JOIN</button>
+<button id="joinBtn">
+JOIN
+</button>
 
-<div id="meeting" style="display:none">
+<div
+id="meeting"
+style="display:none"
+>
 
 <h2 id="roomTitle"></h2>
 
 <div id="versionTag">
-
 USING NEWER VERSION
-
 </div>
 
 <div id="videos">
 
-<video id="localVideo" autoplay muted></video>
+<video
+id="localVideo"
+autoplay
+muted
+></video>
 
-<video id="remoteVideo" autoplay></video>
+<video
+id="remoteVideo"
+autoplay
+></video>
 
 </div>
 
@@ -115,19 +184,25 @@ let localStream;
 let peer;
 let call;
 
-/* detect version */
+/* VERSION SYSTEM */
 
-const IS_NEW_VERSION =
+const VERSION =
 
-location.hostname
-.includes("freestarget.wiliamfashing.com");
+location.hostname ===
+"freestarget.wiliamfashing.com"
+
+? 2
+
+: 1;
 
 /* camera */
 
 async function startCamera(){
 
 localStream =
+
 await navigator.mediaDevices
+
 .getUserMedia({
 
 video:true,
@@ -135,28 +210,27 @@ audio:true
 
 });
 
-document
-.getElementById("localVideo")
-.srcObject = localStream;
+localVideo.srcObject =
+localStream;
 
 }
 
-/* UI */
+/* show UI */
 
 function showMeetingUI(code){
 
 document
 .querySelectorAll("h1")
-.forEach(e=>e.style.display="none");
+.forEach(
+e=>e.style.display="none"
+);
 
 document
 .querySelector("p")
 .style.display="none";
 
 createBtn.style.display="none";
-
 joinCode.style.display="none";
-
 joinBtn.style.display="none";
 
 meeting.style.display="block";
@@ -164,31 +238,28 @@ meeting.style.display="block";
 roomTitle.innerText =
 "STRING: "+code;
 
-/* show tag immediately if new version */
+}
 
-if(IS_NEW_VERSION){
+/* show version warning */
 
-showNewTag();
+function showNewerTag(remoteVersion){
+
+versionTag.innerText =
+"USING NEWER VERSION ("+
+remoteVersion+
+")";
+
+versionTag.style.display=
+"block";
 
 }
 
-}
-
-/* show tag */
-
-function showNewTag(){
-
-document
-.getElementById("versionTag")
-.style.display="block";
-
-}
-
-/* CREATE */
+/* CREATE ROOM */
 
 createBtn.onclick = async ()=>{
 
 const code =
+
 Math.random()
 .toString(36)
 .substring(2,8)
@@ -198,68 +269,83 @@ showMeetingUI(code);
 
 await startCamera();
 
-peer = new Peer(code);
+/* host peer */
 
-peer.on("call",(incoming)=>{
+peer =
+new Peer(code);
 
-/* detect version of caller */
+/* when someone calls */
+
+peer.on(
+"call",
+(incoming)=>{
+
+const remoteVersion =
+incoming.metadata
+? incoming.metadata.version
+: 1;
+
+/* show tag if caller newer */
 
 if(
-
-incoming.metadata &&
-incoming.metadata.version==="new"
-
+remoteVersion > VERSION
 ){
 
-showNewTag();
-
-}
-
-/* answer with metadata */
-
-incoming.answer(
-
-localStream,
-
-{
-
-metadata:{
-
-version:
-IS_NEW_VERSION
-? "new"
-: "legacy"
-
-}
-
-}
-
+showNewerTag(
+remoteVersion
 );
 
-incoming.on("stream",(remoteStream)=>{
+}
+
+/* answer */
+
+incoming.answer(
+localStream,
+{
+metadata:{
+version:VERSION
+}
+}
+);
+
+/* video */
+
+incoming.on(
+"stream",
+(remoteStream)=>{
 
 remoteVideo.srcObject =
 remoteStream;
 
-});
+}
 
-});
+);
 
-peer.on("open",()=>{
+}
+
+);
+
+/* show string */
+
+peer.on(
+"open",
+()=>{
 
 alert(
 "YOUR SESSION STRING "+
 code
+);
+
+}
 
 );
 
-});
-
 };
 
-/* JOIN */
+/* JOIN ROOM */
 
-joinBtn.onclick = async ()=>{
+joinBtn.onclick =
+async ()=>{
 
 const code =
 joinCode.value
@@ -276,48 +362,60 @@ showMeetingUI(code);
 
 await startCamera();
 
-peer = new Peer();
+/* join peer */
 
-peer.on("open",()=>{
+peer =
+new Peer();
 
-call = peer.call(
+/* connect */
+
+peer.on(
+"open",
+()=>{
+
+call =
+peer.call(
 
 code,
 localStream,
 
 {
-
 metadata:{
-
-version:
-IS_NEW_VERSION
-? "new"
-: "legacy"
-
+version:VERSION
 }
-
 }
 
 );
 
 /* detect host version */
 
-call.on("stream",(remoteStream)=>{
+call.on(
+"stream",
+(remoteStream)=>{
 
 remoteVideo.srcObject =
 remoteStream;
 
-});
+}
 
-/* show tag if new version */
+);
 
-if(IS_NEW_VERSION){
+/* check host metadata */
 
-showNewTag();
+if(
+call.metadata &&
+call.metadata.version > VERSION
+){
+
+showNewerTag(
+call.metadata.version
+);
 
 }
 
-});
+}
+
+);
 
 };
 
