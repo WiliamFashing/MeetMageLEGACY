@@ -3,66 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <title>M33TMAG3</title>
+
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
 <style>
-body {
-  background: linear-gradient(#000000, #ffffff);
-  text-align: center;
-  margin: 0;
-  padding: 0;
+
+body{
+background:linear-gradient(#000,#fff);
+text-align:center;
+margin:0;
+padding:0;
 }
 
-h1 {
-  color: #ffffff;
-  text-shadow: 1px 1px 2px #ccc;
-  margin-top: 40px;
+h1{
+color:#fff;
+text-shadow:1px 1px 2px #ccc;
+margin-top:40px;
 }
 
-input {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin: 5px;
-  width: 200px;
+input{
+padding:10px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+margin:5px;
+width:200px;
 }
 
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 5px;
+button{
+padding:10px 20px;
+font-size:16px;
+border-radius:8px;
+cursor:pointer;
+margin:5px;
 }
 
-button:hover {
-  background-color: #3248a8;
+button:hover{
+background:#3248a8;
+color:#fff;
 }
 
-#videos {
-  margin-top: 20px;
+#videos{
+margin-top:20px;
 }
 
-video {
-  width: 40%;
-  border-radius: 12px;
-  margin: 10px;
+video{
+width:40%;
+border-radius:12px;
+margin:10px;
 }
 
-/* NEW VERSION TAG */
-#versionTag {
-  display:none;
-  background:#1aff8c;
-  color:#000;
-  font-weight:bold;
-  padding:8px;
-  border-radius:8px;
-  width:fit-content;
-  margin:auto;
-  margin-top:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
+/* TAG */
+
+#versionTag{
+
+display:none;
+background:#00ff99;
+color:#000;
+font-weight:bold;
+padding:8px 14px;
+border-radius:10px;
+margin:auto;
+margin-top:10px;
+width:max-content;
+
+box-shadow:0 0 12px rgba(0,0,0,0.25);
+
 }
+
 </style>
 </head>
 
@@ -74,22 +82,29 @@ video {
 
 <p>INITIATE A SESSION OR JOIN ONE WITH A STRING</p>
 
-<button id="createBtn">INITIATE</button><br>
+<button id="createBtn">INITIATE</button>
+<br>
 
 <input id="joinCode" placeholder="ENTER STRING">
+
 <button id="joinBtn">JOIN</button>
 
-<div id="meeting" style="display:none;">
+<div id="meeting" style="display:none">
 
 <h2 id="roomTitle"></h2>
 
 <div id="versionTag">
+
 USING NEWER VERSION
+
 </div>
 
 <div id="videos">
+
 <video id="localVideo" autoplay muted></video>
+
 <video id="remoteVideo" autoplay></video>
+
 </div>
 
 </div>
@@ -100,16 +115,24 @@ let localStream;
 let peer;
 let call;
 
-/* detect if this page is the newer version */
-const IS_NEW_VERSION =
-location.hostname.includes("freestarget.wiliamfashing.com");
+/* detect version */
 
-async function startCamera() {
+const IS_NEW_VERSION =
+
+location.hostname
+.includes("freestarget.wiliamfashing.com");
+
+/* camera */
+
+async function startCamera(){
 
 localStream =
-await navigator.mediaDevices.getUserMedia({
+await navigator.mediaDevices
+.getUserMedia({
+
 video:true,
 audio:true
+
 });
 
 document
@@ -117,6 +140,8 @@ document
 .srcObject = localStream;
 
 }
+
+/* UI */
 
 function showMeetingUI(code){
 
@@ -128,30 +153,30 @@ document
 .querySelector("p")
 .style.display="none";
 
-document
-.getElementById("createBtn")
-.style.display="none";
+createBtn.style.display="none";
 
-document
-.getElementById("joinCode")
-.style.display="none";
+joinCode.style.display="none";
 
-document
-.getElementById("joinBtn")
-.style.display="none";
+joinBtn.style.display="none";
 
-document
-.getElementById("meeting")
-.style.display="block";
+meeting.style.display="block";
 
-document
-.getElementById("roomTitle")
-.innerText="STRING: "+code;
+roomTitle.innerText =
+"STRING: "+code;
+
+/* show tag immediately if new version */
+
+if(IS_NEW_VERSION){
+
+showNewTag();
+
+}
 
 }
 
 /* show tag */
-function showNewVersionTag(){
+
+function showNewTag(){
 
 document
 .getElementById("versionTag")
@@ -159,10 +184,9 @@ document
 
 }
 
-/* create session */
-document
-.getElementById("createBtn")
-.onclick = async ()=>{
+/* CREATE */
+
+createBtn.onclick = async ()=>{
 
 const code =
 Math.random()
@@ -178,23 +202,44 @@ peer = new Peer(code);
 
 peer.on("call",(incoming)=>{
 
-/* check metadata */
+/* detect version of caller */
+
 if(
+
 incoming.metadata &&
-incoming.metadata.version === "new"
+incoming.metadata.version==="new"
+
 ){
 
-showNewVersionTag();
+showNewTag();
 
 }
 
-incoming.answer(localStream);
+/* answer with metadata */
+
+incoming.answer(
+
+localStream,
+
+{
+
+metadata:{
+
+version:
+IS_NEW_VERSION
+? "new"
+: "legacy"
+
+}
+
+}
+
+);
 
 incoming.on("stream",(remoteStream)=>{
 
-document
-.getElementById("remoteVideo")
-.srcObject = remoteStream;
+remoteVideo.srcObject =
+remoteStream;
 
 });
 
@@ -202,26 +247,30 @@ document
 
 peer.on("open",()=>{
 
-alert("YOUR SESSION STRING "+code);
+alert(
+"YOUR SESSION STRING "+
+code
+
+);
 
 });
 
 };
 
-/* join session */
-document
-.getElementById("joinBtn")
-.onclick = async ()=>{
+/* JOIN */
+
+joinBtn.onclick = async ()=>{
 
 const code =
-document
-.getElementById("joinCode")
-.value
+joinCode.value
 .trim()
 .toUpperCase();
 
 if(!code)
-return alert("ENTER A SESSION STRING");
+
+return alert(
+"ENTER A SESSION STRING"
+);
 
 showMeetingUI(code);
 
@@ -237,30 +286,36 @@ code,
 localStream,
 
 {
+
 metadata:{
+
 version:
 IS_NEW_VERSION
 ? "new"
 : "legacy"
+
 }
+
 }
 
 );
 
-/* show tag locally if calling from new version */
-if(IS_NEW_VERSION){
-
-showNewVersionTag();
-
-}
+/* detect host version */
 
 call.on("stream",(remoteStream)=>{
 
-document
-.getElementById("remoteVideo")
-.srcObject = remoteStream;
+remoteVideo.srcObject =
+remoteStream;
 
 });
+
+/* show tag if new version */
+
+if(IS_NEW_VERSION){
+
+showNewTag();
+
+}
 
 });
 
