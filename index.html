@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>M33TMAG3</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+body {
+  background: linear-gradient(#000000, #ffffff);
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #ccc;
+  margin-top: 40px;
+}
+
+input {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin: 5px;
+  width: 200px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+button:hover {
+  background-color: #3248a8;
+}
+
+#videos {
+  margin-top: 20px;
+}
+
+video {
+  width: 40%;
+  border-radius: 12px;
+  margin: 10px;
+}
+
+/* NEW VERSION TAG */
+#versionTag {
+  display:none;
+  background:#1aff8c;
+  color:#000;
+  font-weight:bold;
+  padding:8px;
+  border-radius:8px;
+  width:fit-content;
+  margin:auto;
+  margin-top:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+
+<body>
+
+<h1>INITIAL</h1>
+<h1>M33T MAG3</h1>
+<h1>STRING DIALER</h1>
+
+<p>INITIATE A SESSION OR JOIN ONE WITH A STRING</p>
+
+<button id="createBtn">INITIATE</button><br>
+
+<input id="joinCode" placeholder="ENTER STRING">
+<button id="joinBtn">JOIN</button>
+
+<div id="meeting" style="display:none;">
+
+<h2 id="roomTitle"></h2>
+
+<div id="versionTag">
+USING NEWER VERSION
+</div>
+
+<div id="videos">
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+</div>
+
+</div>
+
+<script>
+
+let localStream;
+let peer;
+let call;
+
+/* detect if this page is the newer version */
+const IS_NEW_VERSION =
+location.hostname.includes("freestarget.wiliamfashing.com");
+
+async function startCamera() {
+
+localStream =
+await navigator.mediaDevices.getUserMedia({
+video:true,
+audio:true
+});
+
+document
+.getElementById("localVideo")
+.srcObject = localStream;
+
+}
+
+function showMeetingUI(code){
+
+document
+.querySelectorAll("h1")
+.forEach(e=>e.style.display="none");
+
+document
+.querySelector("p")
+.style.display="none";
+
+document
+.getElementById("createBtn")
+.style.display="none";
+
+document
+.getElementById("joinCode")
+.style.display="none";
+
+document
+.getElementById("joinBtn")
+.style.display="none";
+
+document
+.getElementById("meeting")
+.style.display="block";
+
+document
+.getElementById("roomTitle")
+.innerText="STRING: "+code;
+
+}
+
+/* show tag */
+function showNewVersionTag(){
+
+document
+.getElementById("versionTag")
+.style.display="block";
+
+}
+
+/* create session */
+document
+.getElementById("createBtn")
+.onclick = async ()=>{
+
+const code =
+Math.random()
+.toString(36)
+.substring(2,8)
+.toUpperCase();
+
+showMeetingUI(code);
+
+await startCamera();
+
+peer = new Peer(code);
+
+peer.on("call",(incoming)=>{
+
+/* check metadata */
+if(
+incoming.metadata &&
+incoming.metadata.version === "new"
+){
+
+showNewVersionTag();
+
+}
+
+incoming.answer(localStream);
+
+incoming.on("stream",(remoteStream)=>{
+
+document
+.getElementById("remoteVideo")
+.srcObject = remoteStream;
+
+});
+
+});
+
+peer.on("open",()=>{
+
+alert("YOUR SESSION STRING "+code);
+
+});
+
+};
+
+/* join session */
+document
+.getElementById("joinBtn")
+.onclick = async ()=>{
+
+const code =
+document
+.getElementById("joinCode")
+.value
+.trim()
+.toUpperCase();
+
+if(!code)
+return alert("ENTER A SESSION STRING");
+
+showMeetingUI(code);
+
+await startCamera();
+
+peer = new Peer();
+
+peer.on("open",()=>{
+
+call = peer.call(
+
+code,
+localStream,
+
+{
+metadata:{
+version:
+IS_NEW_VERSION
+? "new"
+: "legacy"
+}
+}
+
+);
+
+/* show tag locally if calling from new version */
+if(IS_NEW_VERSION){
+
+showNewVersionTag();
+
+}
+
+call.on("stream",(remoteStream)=>{
+
+document
+.getElementById("remoteVideo")
+.srcObject = remoteStream;
+
+});
+
+});
+
+};
+
+</script>
+
+</body>
+</html>
